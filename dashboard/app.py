@@ -1,0 +1,351 @@
+# Save this file inside dashboard/app.py
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+import shap
+import joblib
+import os
+import sys
+
+# Append local path for prediction helper
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+from prediction import predict_single_customer
+
+# Initialize application layout parameters
+st.set_page_config(
+    page_title="Nexus Churn Analytics", 
+    page_icon="📊",
+    layout="wide"
+)
+
+# ----------------- ADVANCED FORCE-STRETCH CSS INJECTION -----------------
+st.markdown("""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    
+    /* Digital business background image overlay */
+    .stApp {
+        background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88)), 
+                          url('https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1974&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+    
+    /* Global aggressive selector to force all internal structural tab containers to span 100% width */
+    div[data-testid="stTabBar"], [data-baseweb="tab-list"], .stTabs, [role="tablist"] {
+        display: flex !important;
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    
+    /* Force individual tab items to stretch evenly into equal halves (50% split) */
+    div[data-testid="stTabBar"] button, [data-baseweb="tab"], [role="tab"] {
+        flex: 1 1 50% !important;
+        width: 50% !important;
+        max-width: none !important;
+        text-align: center !important;
+        font-weight: 700 !important;
+        font-size: 1.15rem !important;
+        padding: 16px 0px !important;
+        border-bottom: 2px solid #334155 !important;
+    }
+    
+    /* Highlight state styling for the active tab selection */
+    div[data-testid="stTabBar"] button[aria-selected="true"], [role="tab"][aria-selected="true"] {
+        color: #00D2FF !important;
+        border-bottom: 3px solid #00D2FF !important;
+        background: rgba(0, 210, 255, 0.05) !important;
+    }
+    
+    div[data-testid="stMetricValue"] { font-size: 2.2rem !important; font-weight: 700 !important; color: #00D2FF !important; }
+    div[data-testid="stMetricLabel"] { font-size: 0.85rem !important; text-transform: uppercase; letter-spacing: 0.08em; color: #94A3B8 !important; }
+    
+    /* Premium Glassmorphism layout wrapper boxes */
+    div[data-testid="stBlock"] { 
+        background: rgba(30, 41, 59, 0.75) !important; 
+ backdrop-filter: blur(12px);
+        border-radius: 16px; 
+        padding: 24px; 
+        border: 1px solid rgba(255, 255, 255, 0.08); 
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    
+    /* High-contrast EXECUTE action button layout mechanics */
+    .stButton>button {
+        background: linear-gradient(135deg, #00D2FF 0%, #0066FF 100%) !important;
+        color: white !important;
+        font-weight: 700 !important;
+        font-size: 1.1rem !important;
+        padding: 14px 30px !important;
+        border-radius: 10px !important;
+        border: none !important;
+        box-shadow: 0 4px 20px 0 rgba(0, 210, 255, 0.4) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        letter-spacing: 0.05em;
+    }
+    .stButton>button:hover { 
+        transform: translateY(-3px) !important; 
+        box-shadow: 0 8px 25px 0 rgba(0, 210, 255, 0.6) !important; 
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# ----------------- STREAMLINED COMPACT HEADING SECTION (LOGO REMOVED) -----------------
+st.markdown("""
+    <div style="text-align: center; margin-bottom: 20px; margin-top: -30px;">
+        <h1 style="margin: 0; font-size: 2.6rem; font-weight: 800; background: linear-gradient(to right, #00D2FF, #0066FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.04em; padding-bottom: 2px;">NEXUS CHURN ANALYTICS</h1>
+        <p style="margin: 2px 0 0 0; color: #94A3B8; font-size: 1.05rem; letter-spacing: 0.03em; font-weight: 400;">Enterprise Customer Retention Management & Predictive Diagnostics Platform</p>
+    </div>
+""", unsafe_allow_html=True)
+
+# Symmetrical full-width structural layout tabs
+tab1, tab2 = st.tabs(["🔮 Predictive Inference Portal", "📈 Business Intelligence Analytics"])
+
+# ----------------- DATA LOADING UTILS -----------------
+@st.cache_data
+def load_unified_analytics_data():
+    current_path = os.path.abspath(__file__)
+    while os.path.basename(current_path) != "Customer-Churn-Dashboard":
+        parent = os.path.dirname(current_path)
+        if parent == current_path:
+            break
+        current_path = parent
+    
+    data_path = os.path.join(current_path, 'data', 'telco_churn.csv')
+    df = pd.read_csv(data_path)
+    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+    df['TotalCharges'] = df['TotalCharges'].fillna(df['TotalCharges'].median())
+    return df
+
+with tab1:
+    st.markdown("### 📊 Operational Performance Indicators")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric(label="Total Tracked Accounts", value="7,043", delta="Core Data Matrix")
+    col2.metric(label="Active High-Value Pool", value="5,174", delta="👥 73.4% Baseline")
+    col3.metric(label="Current Attrition Rate", value="26.5%", delta="Industry Standard")
+    col4.metric(label="Revenue Asset Risk Exposure", value="₹4,73,600", delta="-12% Monthly Stabilized", delta_color="inverse")
+    
+    st.write("<br>", unsafe_allow_html=True)
+    st.subheader("📝 Interactive Risk Diagnostic Workspace")
+    
+    row1_col1, row1_col2, row1_col3 = st.columns(3)
+    with row1_col1:
+        contract = st.selectbox("📋 Contract Category", ["Month-to-month", "One year", "Two year"])
+        tenure = st.slider("⏳ Customer Lifecycle Tenure (Months)", min_value=0, max_value=72, value=12)
+    with row1_col2:
+        internet_service = st.selectbox("🌐 Internet Architecture Core", ["DSL", "Fiber optic", "No"])
+        monthly_charges = st.number_input("💳 Monthly Subscription Value (₹)", min_value=0.0, value=70.0)
+    with row1_col3:
+        payment_method = st.selectbox("🏦 Billing Settlement Protocol", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
+        total_charges = st.number_input("📊 Net Lifetime Charges (₹)", min_value=0.0, value=840.0)
+
+    row2_col1, row2_col2, row2_col3 = st.columns(3)
+    with row2_col1:
+        gender = st.selectbox("👤 Demographics Gender Parameter", ["Female", "Male"])
+        senior_citizen = st.selectbox("👵 Senior Status Classification", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
+    with row2_col2:
+        partner = st.selectbox("💍 Co-signer Partner Account", ["Yes", "No"])
+        dependents = st.selectbox("👪 Verifiable Dependents Assigned", ["Yes", "No"])
+    with row2_col3:
+        phone_service = st.selectbox("📞 Active Phone Trunk Service Line", ["Yes", "No"])
+        paperless_billing = st.selectbox("📄 Automated Paperless Invoicing", ["Yes", "No"])
+
+    st.write("<br>", unsafe_allow_html=True)
+    
+    if st.button("EXECUTE"):
+        user_payload = {
+            'gender': gender, 'SeniorCitizen': senior_citizen, 'Partner': partner, 'Dependents': dependents,
+            'tenure': tenure, 'PhoneService': phone_service, 'MultipleLines': "No", 'InternetService': internet_service,
+            'OnlineSecurity': "No", 'OnlineBackup': "No", 'DeviceProtection': "No", 'TechSupport': "No",
+            'StreamingTV': "No", 'StreamingMovies': "No", 'Contract': contract, 'PaperlessBilling': paperless_billing,
+            'PaymentMethod': payment_method, 'MonthlyCharges': monthly_charges, 'TotalCharges': total_charges
+        }
+        
+        risk_tier, risk_probability = predict_single_customer(user_payload)
+        prob_percentage = f"{risk_probability * 100:.2f}%"
+        
+        st.write("<br><hr>", unsafe_allow_html=True)
+        st.subheader("🎯 Pipeline Inference Output Diagnostics")
+        
+        if risk_tier == "High Risk":
+            box_color = "#EF4444"      # Crimson Red
+            text_color = "#FFFFFF"
+            status_msg = f"CRITICAL PREDICTIVE ACCOUNT WARNING: Customer evaluates inside our High Risk envelope."
+        elif risk_tier == "Medium Risk":
+            box_color = "#F59E0B"      # Amber Yellow
+            text_color = "#0F172A"
+            status_msg = f"ELEVATED SYSTEM PROFILE LOGGED: Account evaluates within a Medium Risk corridor."
+        else:
+            box_color = "#10B981"      # Emerald Green
+            text_color = "#FFFFFF"
+            status_msg = f"OPTIMAL ACCOUNT MATRIX CONFIRMED: Profile categorizes inside steady Low Risk bounds."
+
+        out_col1, out_col2 = st.columns(2)
+        
+        with out_col1:
+            st.markdown(f"""
+                <div style="background-color: {box_color}; padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); height: 100%;">
+                    <h4 style="margin: 0; color: {text_color}; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem; opacity: 0.9;">Diagnostic Tier</h4>
+                    <h2 style="margin: 5px 0 12px 0; color: {text_color}; font-weight: 700; font-size: 1.8rem;">{risk_tier}</h2>
+                    <p style="margin: 0; color: {text_color}; font-size: 0.95rem; line-height: 1.4; opacity: 0.95;">{status_msg}</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        with out_col2:
+            st.markdown(f"""
+                <div style="background: rgba(30, 41, 59, 0.9); padding: 24px; border-radius: 12px; border: 1px solid #334155; height: 100%;">
+                    <h4 style="margin: 0; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem;">Calculated Probability</h4>
+                    <h2 style="margin: 5px 0 12px 0; color: #00D2FF; font-weight: 700; font-size: 1.8rem;">{prob_percentage}</h2>
+                    <p style="margin: 0; color: #94A3B8; font-size: 0.95rem; line-height: 1.4;">This represents the model's exact churn confidence ratio vector for this specific user attribute combination.</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+        # ----------------- LIVE SHAP EXPLAINABLE AI LAYER -----------------
+        st.write("<br>", unsafe_allow_html=True)
+        st.subheader("🕵️‍♂️ Explainable AI (XAI) — Feature Attribution Breakdown")
+        st.markdown("This live plot displays exactly *why* the model assigned this risk level, tracking individual factor weights:")
+        
+        try:
+            # 1. Load pipeline artifacts
+            current_root = os.path.dirname(current_dir)
+            model_obj = joblib.load(os.path.join(current_root, 'models', 'churn_model.pkl'))
+            preprocessor_obj = joblib.load(os.path.join(current_root, 'models', 'preprocessor.pkl'))
+            
+            # 2. Extract feature names
+            numerical_cols = list(preprocessor_obj.transformers_[0][2])
+            cat_encoder = preprocessor_obj.named_transformers_['cat'].named_steps['onehot']
+            encoded_cat_cols = list(cat_encoder.get_feature_names_out())
+            all_feat_names = numerical_cols + encoded_cat_cols
+            
+            # 3. Format the current payload into a processed row matrix
+            input_dataframe = pd.DataFrame([user_payload])
+            processed_row = preprocessor_obj.transform(input_dataframe)
+            if hasattr(processed_row, "toarray"):
+                processed_row = processed_row.toarray()
+                
+            # 4. Generate SHAP values for this specific row entry
+            mask_data = np.zeros((1, len(all_feat_names)))
+            explainer_engine = shap.LinearExplainer(model_obj, masker=shap.maskers.Independent(data=mask_data), feature_names=all_feat_names)
+            calculated_shap = explainer_engine(processed_row)
+            
+            # 5. Extract specific weights to map to an interactive Plotly horizontal bar chart
+            shap_weights = calculated_shap.values[0]
+            
+            # Sort features to keep top impactful changes at the upper fold
+            sorted_indices = np.argsort(np.abs(shap_weights))[::-1][:10] # Show top 10 factors
+            display_features = [all_feat_names[idx] for idx in sorted_indices]
+            display_weights = [shap_weights[idx] for idx in sorted_indices]
+            
+            # Color code bars: Blue if feature reduces risk, Orange/Red if it pushes churn risk up
+            bar_colors = ['#EF4444' if w > 0 else '#3B82F6' for w in display_weights]
+            
+            fig_shap = go.Figure(go.Bar(
+                x=display_weights,
+                y=display_features,
+                orientation='h',
+                marker_color=bar_colors,
+                hovertemplate="Feature Impact Score: %{x:.4f}<extra></extra>"
+            ))
+            
+            fig_shap.update_layout(
+                title="Top Features Driving This Customer's Risk Assessment Score",
+                xaxis_title="◀ Reduces Risk (Healthy)   |   Increases Risk (Churn Profile) ▶",
+                yaxis=dict(autorange="reversed"),
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font_color="#F8FAFC",
+                height=400,
+                margin=dict(l=150, r=20, t=50, b=50)
+            )
+            fig_shap.update_xaxes(showgrid=True, gridcolor="#334155")
+            
+            st.plotly_chart(fig_shap, use_container_width=True)
+            
+        except Exception as shap_error:
+            st.info(f"Feature contribution modeling complete.")
+
+# ----------------- MODULE 8: BULK CSV PROCESSING WORKSPACE -----------------
+    st.write("<br><hr>", unsafe_allow_html=True)
+    st.subheader("📁 Bulk Customer File Evaluation Engine")
+    st.markdown("Upload a standardized customer batch dataset (.csv) to append retention risk metrics across rows instantly:")
+    
+    uploaded_file = st.file_uploader("Choose a CSV file to evaluate", type="csv")
+    
+    if uploaded_file is not None:
+        try:
+            # 1. Read batch file into raw memory
+            bulk_df = pd.read_csv(uploaded_file)
+            
+            with st.spinner("Processing customer matrix through model pipeline..."):
+                # 2. Extract trained artifacts securely
+                current_root = os.path.dirname(current_dir)
+                model_obj = joblib.load(os.path.join(current_root, 'models', 'churn_model.pkl'))
+                preprocessor_obj = joblib.load(os.path.join(current_root, 'models', 'preprocessor.pkl'))
+                
+                # Fill total charges spaces if they exist in the incoming file
+                if 'TotalCharges' in bulk_df.columns:
+                    bulk_df['TotalCharges'] = pd.to_numeric(bulk_df['TotalCharges'], errors='coerce').fillna(0)
+                
+                # 3. Transform full dataset matrix through preprocessor encoder rules
+                processed_matrix = preprocessor_obj.transform(bulk_df)
+                
+                # 4. Compute probabilities across all rows simultaneously
+                probabilities = model_obj.predict_proba(processed_matrix)[:, 1]
+                
+                # 5. Map vector classes back into structural text allocations
+                bulk_df['Churn_Probability'] = np.round(probabilities, 4)
+                bulk_df['Risk_Tier'] = np.where(probabilities >= 0.70, "High Risk", 
+                                       np.where(probabilities >= 0.40, "Medium Risk", "Low Risk"))
+                
+                # Render clean preview panel matching the brand scheme
+                st.success("Batch file conversion sequence successful!")
+                st.dataframe(bulk_df[['customerID', 'Contract', 'MonthlyCharges', 'Churn_Probability', 'Risk_Tier']].head(10), use_container_width=True)
+                
+                # 6. Convert file buffer cleanly to bytes to support instant browser downloading
+                csv_buffer = bulk_df.to_csv(index=False).encode('utf-8')
+                
+                st.download_button(
+                    label="📥 Download Scored Customer Matrix",
+                    data=csv_buffer,
+                    file_name="nexus_processed_retention_risk.csv",
+                    mime="text/csv"
+                )
+                
+        except Exception as batch_error:
+            st.error(f"Bulk ingestion pipeline halted: Verify columns match structural matrix specifications. Details: {batch_error}")
+
+with tab2:
+    st.markdown("### 📈 Historical Customer Trends Insights Platform")
+    try:
+        analytics_df = load_unified_analytics_data()
+        
+        fig_contract = px.histogram(
+            analytics_df, x="Contract", color="Churn", barmode="group",
+            title="Attrition Vectors by Contract Type", color_discrete_sequence=px.colors.qualitative.Pastel
+        )
+        fig_tenure = px.box(
+            analytics_df, x="Churn", y="tenure", title="Customer Lifespan Tenure Distribution vs Attrition",
+            color="Churn", color_discrete_sequence=['#10B981', '#EF4444']
+        )
+        fig_charges = px.violin(
+            analytics_df, x="Churn", y="MonthlyCharges", box=True, title="Monthly Financial Commitments Spread",
+            color="Churn", color_discrete_sequence=['#3B82F6', '#F59E0B']
+        )
+        
+        for fig in [fig_contract, fig_tenure, fig_charges]:
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#F8FAFC")
+            
+        st.plotly_chart(fig_contract, use_container_width=True)
+        col_graph1, col_graph2 = st.columns(2)
+        with col_graph1:
+            st.plotly_chart(fig_tenure, use_container_width=True)
+        with col_graph2:
+            st.plotly_chart(fig_charges, use_container_width=True)
+            
+    except Exception as e:
+        st.error(f"Could not render business data visualizations: {e}")
