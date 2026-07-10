@@ -107,16 +107,18 @@ st.markdown("""
 tab1, tab2 = st.tabs(["🔮 Predictive Inference Portal", "📈 Business Intelligence Analytics"])
 
 # ----------------- DATA LOADING UTILS -----------------
+# Replace this exact function inside dashboard/app.py
 @st.cache_data
 def load_unified_analytics_data():
-    current_path = os.path.abspath(__file__)
-    while os.path.basename(current_path) != "Customer-Churn-Dashboard":
-        parent = os.path.dirname(current_path)
-        if parent == current_path:
-            break
-        current_path = parent
+    # Find the directory where app.py itself lives (dashboard/)
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    data_path = os.path.join(current_path, 'data', 'telco_churn.csv')
+    # Move up one level to the true project root directory
+    project_root = os.path.dirname(current_script_dir)
+    
+    # Construct a clean absolute path directly to your data folder
+    data_path = os.path.join(project_root, 'data', 'telco_churn.csv')
+    
     df = pd.read_csv(data_path)
     df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
     df['TotalCharges'] = df['TotalCharges'].fillna(df['TotalCharges'].median())
