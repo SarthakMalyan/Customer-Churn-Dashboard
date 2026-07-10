@@ -1,30 +1,25 @@
 import pandas as pd
 import joblib
 import os
+import joblib
 
 def load_prediction_artifacts():
-    """Locates the models folder by tracking the project directory structure explicitly."""
-    # Find the folder we are running in
-    current_path = os.path.abspath(__file__)
+    # Dynamically find the absolute path of the directory this script lives in (dashboard/)
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # Climb up until we hit our root project directory
-    while os.path.basename(current_path) != "Customer-Churn-Dashboard":
-        parent = os.path.dirname(current_path)
-        if parent == current_path: # Breakout fallback if not found
-            break
-        current_path = parent
-        
-    # Construct the definitive absolute path directly to your models folder
-    model_path = os.path.join(current_path, 'models', 'churn_model.pkl')
-    preprocessor_path = os.path.join(current_path, 'models', 'preprocessor.pkl')
+    # Go up one level to the project root directory
+    project_root = os.path.dirname(current_script_dir)
     
-    # Let's print out exactly where it's looking to the console for easy debugging
-    print(f"[DEBUG] Attempting to load model from: {model_path}")
+    # Create foolproof absolute paths to your models directory
+    model_path = os.path.join(project_root, 'models', 'churn_model.pkl')
+    preprocessor_path = os.path.join(project_root, 'models', 'preprocessor.pkl')
     
+    # Load your artifacts using the absolute paths
     model = joblib.load(model_path)
     preprocessor = joblib.load(preprocessor_path)
+    
     return model, preprocessor
-
+    
 def predict_single_customer(input_data):
     model, preprocessor = load_prediction_artifacts()
     input_df = pd.DataFrame([input_data])
