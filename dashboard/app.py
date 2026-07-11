@@ -219,15 +219,15 @@ with tab1:
             if cluster_id == 0:
                 segment_name = "Core Budget Long-Termers"
                 segment_desc = "Highly stable, low-monthly-fee users with extended life tenure patterns."
-                strategy = "🎖️ **LOVER RETENTION:** Provide long-term loyalty points or small device upgrade options to ensure they never switch."
+                strategy = "🎖️ <b>LOVER RETENTION:<b> Provide long-term loyalty points or small device upgrade options to ensure they never switch."
             elif cluster_id == 1:
                 segment_name = "Premium High-Value Enterprises"
                 segment_desc = "Generates top tier revenue streams but demands high operational bandwidth."
-                strategy = "🚨 **VIP SUPPORT INTERVENTION:** Assign a dedicated relationship manager immediately. Offer bundle adjustments or priority customer service paths."
+                strategy = "🚨 <b>VIP SUPPORT INTERVENTION:<b> Assign a dedicated relationship manager immediately. Offer bundle adjustments or priority customer service paths."
             else:
                 segment_name = "High-Risk New Standard Registrations"
                 segment_desc = "Fresh accounts paying standard monthly charges but lacking structural tenure loyalty."
-                strategy = "📈 **ENGAGEMENT CONVERSION:** Offer a promotional discount if they upgrade from month-to-month to a 1-Year or 2-Year contract option."
+                strategy = "📈 <b>ENGAGEMENT CONVERSION:<b> Offer a promotional discount if they upgrade from month-to-month to a 1-Year or 2-Year contract option."
                 
             # Render side-by-side segmentation card and action banner
             seg_col1, seg_col2 = st.columns([1, 2])
