@@ -99,7 +99,7 @@ st.markdown("""
 st.markdown("""
     <div style="text-align: center; margin-bottom: 20px; margin-top: -30px;">
         <h1 style="margin: 0; font-size: 2.6rem; font-weight: 800; background: linear-gradient(to right, #00D2FF, #0066FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.04em; padding-bottom: 2px;">RetainIQ</h1>
-        <p style="margin: 2px 0 0 0; color: #94A3B8; font-size: 1.05rem; letter-spacing: 0.03em; font-weight: 400;">by Sarthak Malyan</p>
+        <p style="margin: 2px 0 0 0; color: #94A3B8; font-size: 1.05rem; letter-spacing: 0.03em; font-weight: 400;">     by Sarthak Malyan</p>
     </div>
 """, unsafe_allow_html=True)
 
