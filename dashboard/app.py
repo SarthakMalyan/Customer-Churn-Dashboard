@@ -2,17 +2,17 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
 import shap
 import joblib
 import os
 import sys
 
-# Append local path for prediction helper
+# Append local path for custom architectural imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
 from prediction import predict_single_customer
+from analytics import render_bi_analytics_tab  # Imported Module 3 engine cleanly
 
 # Initialize application layout parameters
 st.set_page_config(
@@ -27,7 +27,6 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
-    /* Digital business background image overlay */
     .stApp {
         background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88)), 
                           url('https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=1974&auto=format&fit=crop');
@@ -36,14 +35,12 @@ st.markdown("""
         background-attachment: fixed;
     }
     
-    /* Global aggressive selector to force all internal structural tab containers to span 100% width */
     div[data-testid="stTabBar"], [data-baseweb="tab-list"], .stTabs, [role="tablist"] {
         display: flex !important;
         width: 100% !important;
         justify-content: space-between !important;
     }
     
-    /* Force individual tab items to stretch evenly into equal halves (50% split) */
     div[data-testid="stTabBar"] button, [data-baseweb="tab"], [role="tab"] {
         flex: 1 1 50% !important;
         width: 50% !important;
@@ -55,7 +52,6 @@ st.markdown("""
         border-bottom: 2px solid #334155 !important;
     }
     
-    /* Highlight state styling for the active tab selection */
     div[data-testid="stTabBar"] button[aria-selected="true"], [role="tab"][aria-selected="true"] {
         color: #00D2FF !important;
         border-bottom: 3px solid #00D2FF !important;
@@ -65,7 +61,6 @@ st.markdown("""
     div[data-testid="stMetricValue"] { font-size: 2.2rem !important; font-weight: 700 !important; color: #00D2FF !important; }
     div[data-testid="stMetricLabel"] { font-size: 0.85rem !important; text-transform: uppercase; letter-spacing: 0.08em; color: #94A3B8 !important; }
     
-    /* Premium Glassmorphism layout wrapper boxes */
     div[data-testid="stBlock"] { 
         background: rgba(30, 41, 59, 0.75) !important; 
         backdrop-filter: blur(12px);
@@ -75,7 +70,6 @@ st.markdown("""
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
     
-    /* High-contrast EXECUTE action button layout mechanics */
     .stButton>button {
         background: linear-gradient(135deg, #00D2FF 0%, #0066FF 100%) !important;
         color: white !important;
@@ -95,28 +89,16 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ----------------- STREAMLINED COMPACT HEADING SECTION (LOGO REMOVED) -----------------
+# ----------------- COMPACT CENTRALIZED HEADER -----------------
 st.markdown("""
     <div style="text-align: center; margin-bottom: 20px; margin-top: -30px;">
-        <h1 style="margin: 0; font-size: 2.6rem; font-weight: 800; background: linear-gradient(to right, #00D2FF, #0066FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.04em; padding-bottom: 2px;">RetainIQ</h1>
-        <p style="margin: 2px 0 0 0; color: #94A3B8; font-size: 1.05rem; letter-spacing: 0.03em; font-weight: 400;">     by Sarthak Malyan</p>
+        <h1 style="margin: 0; font-size: 2.8rem; font-weight: 800; background: linear-gradient(to right, #00D2FF, #0066FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.04em; padding-bottom: 2px;">RetainIQ</h1>
+        <p style="margin: 2px 0 0 0; color: #94A3B8; font-size: 1.1rem; letter-spacing: 0.03em; font-weight: 500;">by Sarthak Malyan</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Symmetrical full-width structural layout tabs
+# Symmetrical layout structure
 tab1, tab2 = st.tabs(["Predictive Inference Portal", "Business Intelligence Analytics"])
-
-# ----------------- DATA LOADING UTILS -----------------
-@st.cache_data
-def load_unified_analytics_data():
-    current_script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_script_dir)
-    data_path = os.path.join(project_root, 'data', 'telco_churn.csv')
-    
-    df = pd.read_csv(data_path)
-    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
-    df['TotalCharges'] = df['TotalCharges'].fillna(df['TotalCharges'].median())
-    return df
 
 with tab1:
     st.markdown("### Operational Performance Indicators")
@@ -169,20 +151,19 @@ with tab1:
         st.subheader("Pipeline Inference Output Diagnostics")
         
         if risk_tier == "High Risk":
-            box_color = "#EF4444"      # Crimson Red
+            box_color = "#EF4444"
             text_color = "#FFFFFF"
             status_msg = f"CRITICAL PREDICTIVE ACCOUNT WARNING: Customer evaluates inside our High Risk envelope."
         elif risk_tier == "Medium Risk":
-            box_color = "#F59E0B"      # Amber Yellow
+            box_color = "#F59E0B"
             text_color = "#0F172A"
             status_msg = f"ELEVATED SYSTEM PROFILE LOGGED: Account evaluates within a Medium Risk corridor."
         else:
-            box_color = "#10B981"      # Emerald Green
+            box_color = "#10B981"
             text_color = "#FFFFFF"
             status_msg = f"OPTIMAL ACCOUNT MATRIX CONFIRMED: Profile categorizes inside steady Low Risk bounds."
 
         out_col1, out_col2 = st.columns(2)
-        
         with out_col1:
             st.markdown(f"""
                 <div style="background-color: {box_color}; padding: 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); height: 100%;">
@@ -197,11 +178,11 @@ with tab1:
                 <div style="background: rgba(30, 41, 59, 0.9); padding: 24px; border-radius: 12px; border: 1px solid #334155; height: 100%;">
                     <h4 style="margin: 0; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem;">Calculated Probability</h4>
                     <h2 style="margin: 5px 0 12px 0; color: #00D2FF; font-weight: 700; font-size: 1.8rem;">{prob_percentage}</h2>
-                    <p style="margin: 0; color: #94A3B8; font-size: 0.95rem; line-height: 1.4;">This represents the model's exact churn confidence ratio vector for this specific user attribute combination.</p>
+                    <p style="margin: 0; color: #94A3B8; font-size: 0.95rem; line-height: 1.4;">This represents the model's exact churn confidence ratio vector.</p>
                 </div>
             """, unsafe_allow_html=True)
 
-        # ----------------- MODULE 4 & 6: K-MEANS SEGMENTATION & ACTIONS -----------------
+        # ----------------- MODULE 4 & 6 SECTIONS -----------------
         st.write("<br>", unsafe_allow_html=True)
         st.subheader("Behavioral Segmentation & Personalized Action Plan")
         
@@ -210,26 +191,23 @@ with tab1:
             kmeans_model = joblib.load(os.path.join(current_root, 'models', 'kmeans_model.pkl'))
             cluster_scaler = joblib.load(os.path.join(current_root, 'models', 'cluster_scaler.pkl'))
             
-            # Format inputs for K-Means cluster deduction
             raw_features = np.array([[tenure, monthly_charges]])
             scaled_features = cluster_scaler.transform(raw_features)
             cluster_id = kmeans_model.predict(scaled_features)[0]
             
-            # Match cluster IDs to strategic corporate personas
             if cluster_id == 0:
                 segment_name = "Core Budget Long-Termers"
                 segment_desc = "Highly stable, low-monthly-fee users with extended life tenure patterns."
-                strategy = "🎖️ <b>LOVER RETENTION:<b> Provide long-term loyalty points or small device upgrade options to ensure they never switch."
+                strategy = "🎖️ <b>LOYALTY RETENTION:</b> Provide long-term loyalty points or small device upgrade options to ensure they never switch."
             elif cluster_id == 1:
                 segment_name = "Premium High-Value Enterprises"
                 segment_desc = "Generates top tier revenue streams but demands high operational bandwidth."
-                strategy = "<b>VIP SUPPORT INTERVENTION:<b> Assign a dedicated relationship manager immediately. Offer bundle adjustments or priority customer service paths."
+                strategy = "<b>VIP SUPPORT INTERVENTION:</b> Assign a dedicated relationship manager immediately. Offer bundle adjustments or priority customer service paths."
             else:
                 segment_name = "High-Risk New Standard Registrations"
-                segment_desc = "Fresh accounts paying standard monthly charges but lacking structural tenure loyalty."
-                strategy = "<b>ENGAGEMENT CONVERSION:<b> Offer a promotional discount if they upgrade from month-to-month to a 1-Year or 2-Year contract option."
+                segment_desc = "Fresh accounts paying standard monthly charges but lacking structural loyalty."
+                strategy = "<b>ENGAGEMENT CONVERSION:</b> Offer a promotional discount if they upgrade from month-to-month to a 1-Year or 2-Year contract option."
                 
-            # Render side-by-side segmentation card and action banner
             seg_col1, seg_col2 = st.columns([1, 2])
             with seg_col1:
                 st.markdown(f"""
@@ -247,11 +225,10 @@ with tab1:
                         <p style="margin: 8px 0 0 0; color: #F8FAFC; font-size: 0.95rem; line-height: 1.5;">{strategy}</p>
                     </div>
                 """, unsafe_allow_html=True)
-                
         except Exception as e:
             st.info("Behavioral segment assignment ready.")
             
-        # ----------------- LIVE SHAP EXPLAINABLE AI LAYER -----------------
+        # ----------------- MODULE 7: SHAP PLOT ENGINE -----------------
         st.write("<br>", unsafe_allow_html=True)
         st.subheader("Explainable AI (XAI) — Feature Attribution Breakdown")
         
@@ -301,21 +278,17 @@ with tab1:
             )
             fig_shap.update_xaxes(showgrid=True, gridcolor="#334155")
             st.plotly_chart(fig_shap, use_container_width=True)
-            
         except Exception as shap_error:
             st.info("Feature contribution modeling complete.")
 
-    # ----------------- MODULE 8: BULK CSV PROCESSING WORKSPACE -----------------
+    # ----------------- MODULE 8: BULK WORKSPACE -----------------
     st.write("<br><hr>", unsafe_allow_html=True)
     st.subheader("Bulk Customer File Evaluation Engine")
-    st.markdown("Upload a standardized customer batch dataset (.csv) to append retention risk metrics across rows instantly:")
     
     uploaded_file = st.file_uploader("Choose a CSV file to evaluate", type="csv")
-    
     if uploaded_file is not None:
         try:
             bulk_df = pd.read_csv(uploaded_file)
-            
             with st.spinner("Processing customer matrix through model pipeline..."):
                 current_root = os.path.dirname(current_dir)
                 model_obj = joblib.load(os.path.join(current_root, 'models', 'churn_model.pkl'))
@@ -337,40 +310,11 @@ with tab1:
                 csv_buffer = bulk_df.to_csv(index=False).encode('utf-8')
                 st.download_button(
                     label="📥 Download Scored Customer Matrix",
-                    data=csv_buffer,
-                    file_name="nexus_processed_retention_risk.csv",
-                    mime="text/csv"
+                    data=csv_buffer, file_name="nexus_processed_retention_risk.csv", mime="text/csv"
                 )
         except Exception as batch_error:
             st.error(f"Bulk ingestion pipeline halted: {batch_error}")
 
 with tab2:
-    st.markdown("### Historical Customer Trends Insights Platform")
-    try:
-        analytics_df = load_unified_analytics_data()
-        
-        fig_contract = px.histogram(
-            analytics_df, x="Contract", color="Churn", barmode="group",
-            title="Attrition Vectors by Contract Type", color_discrete_sequence=px.colors.qualitative.Pastel
-        )
-        fig_tenure = px.box(
-            analytics_df, x="Churn", y="tenure", title="Customer Lifespan Tenure Distribution vs Attrition",
-            color="Churn", color_discrete_sequence=['#10B981', '#EF4444']
-        )
-        fig_charges = px.violin(
-            analytics_df, x="Churn", y="MonthlyCharges", box=True, title="Monthly Financial Commitments Spread",
-            color="Churn", color_discrete_sequence=['#3B82F6', '#F59E0B']
-        )
-        
-        for fig in [fig_contract, fig_tenure, fig_charges]:
-            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="#F8FAFC")
-            
-        st.plotly_chart(fig_contract, use_container_width=True)
-        col_graph1, col_graph2 = st.columns(2)
-        with col_graph1:
-            st.plotly_chart(fig_tenure, use_container_width=True)
-        with col_graph2:
-            st.plotly_chart(fig_charges, use_container_width=True)
-            
-    except Exception as e:
-        st.error(f"Could not render business data visualizations: {e}")
+    # Call the outsourced Module 3 Analytics Engine seamlessly
+    render_bi_analytics_tab()
