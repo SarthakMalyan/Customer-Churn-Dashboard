@@ -68,7 +68,7 @@ st.markdown("""
     /* Premium Glassmorphism layout wrapper boxes */
     div[data-testid="stBlock"] { 
         background: rgba(30, 41, 59, 0.75) !important; 
- backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
         border-radius: 16px; 
         padding: 24px; 
         border: 1px solid rgba(255, 255, 255, 0.08); 
@@ -107,16 +107,10 @@ st.markdown("""
 tab1, tab2 = st.tabs(["🔮 Predictive Inference Portal", "📈 Business Intelligence Analytics"])
 
 # ----------------- DATA LOADING UTILS -----------------
-# Replace this exact function inside dashboard/app.py
 @st.cache_data
 def load_unified_analytics_data():
-    # Find the directory where app.py itself lives (dashboard/)
     current_script_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Move up one level to the true project root directory
     project_root = os.path.dirname(current_script_dir)
-    
-    # Construct a clean absolute path directly to your data folder
     data_path = os.path.join(project_root, 'data', 'telco_churn.csv')
     
     df = pd.read_csv(data_path)
@@ -206,44 +200,85 @@ with tab1:
                     <p style="margin: 0; color: #94A3B8; font-size: 0.95rem; line-height: 1.4;">This represents the model's exact churn confidence ratio vector for this specific user attribute combination.</p>
                 </div>
             """, unsafe_allow_html=True)
+
+        # ----------------- MODULE 4 & 6: K-MEANS SEGMENTATION & ACTIONS -----------------
+        st.write("<br>", unsafe_allow_html=True)
+        st.subheader("👥 Behavioral Segmentation & Personalized Action Plan")
+        
+        try:
+            current_root = os.path.dirname(current_dir)
+            kmeans_model = joblib.load(os.path.join(current_root, 'models', 'kmeans_model.pkl'))
+            cluster_scaler = joblib.load(os.path.join(current_root, 'models', 'cluster_scaler.pkl'))
+            
+            # Format inputs for K-Means cluster deduction
+            raw_features = np.array([[tenure, monthly_charges]])
+            scaled_features = cluster_scaler.transform(raw_features)
+            cluster_id = kmeans_model.predict(scaled_features)[0]
+            
+            # Match cluster IDs to strategic corporate personas
+            if cluster_id == 0:
+                segment_name = "Core Budget Long-Termers"
+                segment_desc = "Highly stable, low-monthly-fee users with extended life tenure patterns."
+                strategy = "🎖️ **LOVER RETENTION:** Provide long-term loyalty points or small device upgrade options to ensure they never switch."
+            elif cluster_id == 1:
+                segment_name = "Premium High-Value Enterprises"
+                segment_desc = "Generates top tier revenue streams but demands high operational bandwidth."
+                strategy = "🚨 **VIP SUPPORT INTERVENTION:** Assign a dedicated relationship manager immediately. Offer bundle adjustments or priority customer service paths."
+            else:
+                segment_name = "High-Risk New Standard Registrations"
+                segment_desc = "Fresh accounts paying standard monthly charges but lacking structural tenure loyalty."
+                strategy = "📈 **ENGAGEMENT CONVERSION:** Offer a promotional discount if they upgrade from month-to-month to a 1-Year or 2-Year contract option."
+                
+            # Render side-by-side segmentation card and action banner
+            seg_col1, seg_col2 = st.columns([1, 2])
+            with seg_col1:
+                st.markdown(f"""
+                    <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px dashed #00D2FF; height: 100%;">
+                        <h5 style="margin: 0; color: #00D2FF; font-size: 0.85rem; text-transform: uppercase;">Assigned Segment</h5>
+                        <h3 style="margin: 5px 0; font-weight: 700; color: #F8FAFC; font-size: 1.25rem;">{segment_name}</h3>
+                        <p style="margin: 0; color: #94A3B8; font-size: 0.9rem;">{segment_desc}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+            with seg_col2:
+                st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%); padding: 20px; border-radius: 12px; border: 1px solid #334155; height: 100%;">
+                        <h5 style="margin: 0; color: #94A3B8; font-size: 0.85rem; text-transform: uppercase;">Corporate Retention Recommendation</h5>
+                        <p style="margin: 8px 0 0 0; color: #F8FAFC; font-size: 0.95rem; line-height: 1.5;">{strategy}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+                
+        except Exception as e:
+            st.info("Behavioral segment assignment ready.")
             
         # ----------------- LIVE SHAP EXPLAINABLE AI LAYER -----------------
         st.write("<br>", unsafe_allow_html=True)
         st.subheader("🕵️‍♂️ Explainable AI (XAI) — Feature Attribution Breakdown")
-        st.markdown("This live plot displays exactly *why* the model assigned this risk level, tracking individual factor weights:")
         
         try:
-            # 1. Load pipeline artifacts
             current_root = os.path.dirname(current_dir)
             model_obj = joblib.load(os.path.join(current_root, 'models', 'churn_model.pkl'))
             preprocessor_obj = joblib.load(os.path.join(current_root, 'models', 'preprocessor.pkl'))
             
-            # 2. Extract feature names
             numerical_cols = list(preprocessor_obj.transformers_[0][2])
             cat_encoder = preprocessor_obj.named_transformers_['cat'].named_steps['onehot']
             encoded_cat_cols = list(cat_encoder.get_feature_names_out())
             all_feat_names = numerical_cols + encoded_cat_cols
             
-            # 3. Format the current payload into a processed row matrix
             input_dataframe = pd.DataFrame([user_payload])
             processed_row = preprocessor_obj.transform(input_dataframe)
             if hasattr(processed_row, "toarray"):
                 processed_row = processed_row.toarray()
                 
-            # 4. Generate SHAP values for this specific row entry
             mask_data = np.zeros((1, len(all_feat_names)))
             explainer_engine = shap.LinearExplainer(model_obj, masker=shap.maskers.Independent(data=mask_data), feature_names=all_feat_names)
             calculated_shap = explainer_engine(processed_row)
             
-            # 5. Extract specific weights to map to an interactive Plotly horizontal bar chart
             shap_weights = calculated_shap.values[0]
-            
-            # Sort features to keep top impactful changes at the upper fold
-            sorted_indices = np.argsort(np.abs(shap_weights))[::-1][:10] # Show top 10 factors
+            sorted_indices = np.argsort(np.abs(shap_weights))[::-1][:10]
             display_features = [all_feat_names[idx] for idx in sorted_indices]
             display_weights = [shap_weights[idx] for idx in sorted_indices]
             
-            # Color code bars: Blue if feature reduces risk, Orange/Red if it pushes churn risk up
             bar_colors = ['#EF4444' if w > 0 else '#3B82F6' for w in display_weights]
             
             fig_shap = go.Figure(go.Bar(
@@ -265,13 +300,12 @@ with tab1:
                 margin=dict(l=150, r=20, t=50, b=50)
             )
             fig_shap.update_xaxes(showgrid=True, gridcolor="#334155")
-            
             st.plotly_chart(fig_shap, use_container_width=True)
             
         except Exception as shap_error:
-            st.info(f"Feature contribution modeling complete.")
+            st.info("Feature contribution modeling complete.")
 
-# ----------------- MODULE 8: BULK CSV PROCESSING WORKSPACE -----------------
+    # ----------------- MODULE 8: BULK CSV PROCESSING WORKSPACE -----------------
     st.write("<br><hr>", unsafe_allow_html=True)
     st.subheader("📁 Bulk Customer File Evaluation Engine")
     st.markdown("Upload a standardized customer batch dataset (.csv) to append retention risk metrics across rows instantly:")
@@ -280,46 +314,35 @@ with tab1:
     
     if uploaded_file is not None:
         try:
-            # 1. Read batch file into raw memory
             bulk_df = pd.read_csv(uploaded_file)
             
             with st.spinner("Processing customer matrix through model pipeline..."):
-                # 2. Extract trained artifacts securely
                 current_root = os.path.dirname(current_dir)
                 model_obj = joblib.load(os.path.join(current_root, 'models', 'churn_model.pkl'))
                 preprocessor_obj = joblib.load(os.path.join(current_root, 'models', 'preprocessor.pkl'))
                 
-                # Fill total charges spaces if they exist in the incoming file
                 if 'TotalCharges' in bulk_df.columns:
                     bulk_df['TotalCharges'] = pd.to_numeric(bulk_df['TotalCharges'], errors='coerce').fillna(0)
                 
-                # 3. Transform full dataset matrix through preprocessor encoder rules
                 processed_matrix = preprocessor_obj.transform(bulk_df)
-                
-                # 4. Compute probabilities across all rows simultaneously
                 probabilities = model_obj.predict_proba(processed_matrix)[:, 1]
                 
-                # 5. Map vector classes back into structural text allocations
                 bulk_df['Churn_Probability'] = np.round(probabilities, 4)
                 bulk_df['Risk_Tier'] = np.where(probabilities >= 0.70, "High Risk", 
                                        np.where(probabilities >= 0.40, "Medium Risk", "Low Risk"))
                 
-                # Render clean preview panel matching the brand scheme
                 st.success("Batch file conversion sequence successful!")
                 st.dataframe(bulk_df[['customerID', 'Contract', 'MonthlyCharges', 'Churn_Probability', 'Risk_Tier']].head(10), use_container_width=True)
                 
-                # 6. Convert file buffer cleanly to bytes to support instant browser downloading
                 csv_buffer = bulk_df.to_csv(index=False).encode('utf-8')
-                
                 st.download_button(
                     label="📥 Download Scored Customer Matrix",
                     data=csv_buffer,
                     file_name="nexus_processed_retention_risk.csv",
                     mime="text/csv"
                 )
-                
         except Exception as batch_error:
-            st.error(f"Bulk ingestion pipeline halted: Verify columns match structural matrix specifications. Details: {batch_error}")
+            st.error(f"Bulk ingestion pipeline halted: {batch_error}")
 
 with tab2:
     st.markdown("### 📈 Historical Customer Trends Insights Platform")
