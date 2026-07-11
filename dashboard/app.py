@@ -16,7 +16,7 @@ from prediction import predict_single_customer
 
 # Initialize application layout parameters
 st.set_page_config(
-    page_title="Nexus Churn Analytics", 
+    page_title="RetainIQ", 
     page_icon="📊",
     layout="wide"
 )
@@ -104,7 +104,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Symmetrical full-width structural layout tabs
-tab1, tab2 = st.tabs(["Predictive Inference Portal", "📈 Business Intelligence Analytics"])
+tab1, tab2 = st.tabs(["Predictive Inference Portal", "Business Intelligence Analytics"])
 
 # ----------------- DATA LOADING UTILS -----------------
 @st.cache_data
