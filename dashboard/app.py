@@ -104,7 +104,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Symmetrical full-width structural layout tabs
-tab1, tab2 = st.tabs(["🔮 Predictive Inference Portal", "📈 Business Intelligence Analytics"])
+tab1, tab2 = st.tabs(["Predictive Inference Portal", "📈 Business Intelligence Analytics"])
 
 # ----------------- DATA LOADING UTILS -----------------
 @st.cache_data
@@ -119,7 +119,7 @@ def load_unified_analytics_data():
     return df
 
 with tab1:
-    st.markdown("### 📊 Operational Performance Indicators")
+    st.markdown("### Operational Performance Indicators")
     col1, col2, col3, col4 = st.columns(4)
     col1.metric(label="Total Tracked Accounts", value="7,043", delta="Core Data Matrix")
     col2.metric(label="Active High-Value Pool", value="5,174", delta="👥 73.4% Baseline")
@@ -127,29 +127,29 @@ with tab1:
     col4.metric(label="Revenue Asset Risk Exposure", value="₹4,73,600", delta="-12% Monthly Stabilized", delta_color="inverse")
     
     st.write("<br>", unsafe_allow_html=True)
-    st.subheader("📝 Interactive Risk Diagnostic Workspace")
+    st.subheader("Interactive Risk Diagnostic Workspace")
     
     row1_col1, row1_col2, row1_col3 = st.columns(3)
     with row1_col1:
-        contract = st.selectbox("📋 Contract Category", ["Month-to-month", "One year", "Two year"])
-        tenure = st.slider("⏳ Customer Lifecycle Tenure (Months)", min_value=0, max_value=72, value=12)
+        contract = st.selectbox("Contract Category", ["Month-to-month", "One year", "Two year"])
+        tenure = st.slider("Customer Lifecycle Tenure (Months)", min_value=0, max_value=72, value=12)
     with row1_col2:
-        internet_service = st.selectbox("🌐 Internet Architecture Core", ["DSL", "Fiber optic", "No"])
-        monthly_charges = st.number_input("💳 Monthly Subscription Value (₹)", min_value=0.0, value=70.0)
+        internet_service = st.selectbox("Internet Architecture Core", ["DSL", "Fiber optic", "No"])
+        monthly_charges = st.number_input("Monthly Subscription Value (₹)", min_value=0.0, value=70.0)
     with row1_col3:
-        payment_method = st.selectbox("🏦 Billing Settlement Protocol", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
-        total_charges = st.number_input("📊 Net Lifetime Charges (₹)", min_value=0.0, value=840.0)
+        payment_method = st.selectbox("Billing Settlement Protocol", ["Electronic check", "Mailed check", "Bank transfer (automatic)", "Credit card (automatic)"])
+        total_charges = st.number_input("Net Lifetime Charges (₹)", min_value=0.0, value=840.0)
 
     row2_col1, row2_col2, row2_col3 = st.columns(3)
     with row2_col1:
-        gender = st.selectbox("👤 Demographics Gender Parameter", ["Female", "Male"])
-        senior_citizen = st.selectbox("👵 Senior Status Classification", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
+        gender = st.selectbox("Demographics Gender Parameter", ["Female", "Male"])
+        senior_citizen = st.selectbox("Senior Status Classification", [0, 1], format_func=lambda x: "Yes" if x == 1 else "No")
     with row2_col2:
-        partner = st.selectbox("💍 Co-signer Partner Account", ["Yes", "No"])
-        dependents = st.selectbox("👪 Verifiable Dependents Assigned", ["Yes", "No"])
+        partner = st.selectbox("Co-signer Partner Account", ["Yes", "No"])
+        dependents = st.selectbox("Verifiable Dependents Assigned", ["Yes", "No"])
     with row2_col3:
-        phone_service = st.selectbox("📞 Active Phone Trunk Service Line", ["Yes", "No"])
-        paperless_billing = st.selectbox("📄 Automated Paperless Invoicing", ["Yes", "No"])
+        phone_service = st.selectbox("Active Phone Trunk Service Line", ["Yes", "No"])
+        paperless_billing = st.selectbox("Automated Paperless Invoicing", ["Yes", "No"])
 
     st.write("<br>", unsafe_allow_html=True)
     
@@ -166,7 +166,7 @@ with tab1:
         prob_percentage = f"{risk_probability * 100:.2f}%"
         
         st.write("<br><hr>", unsafe_allow_html=True)
-        st.subheader("🎯 Pipeline Inference Output Diagnostics")
+        st.subheader("Pipeline Inference Output Diagnostics")
         
         if risk_tier == "High Risk":
             box_color = "#EF4444"      # Crimson Red
@@ -203,7 +203,7 @@ with tab1:
 
         # ----------------- MODULE 4 & 6: K-MEANS SEGMENTATION & ACTIONS -----------------
         st.write("<br>", unsafe_allow_html=True)
-        st.subheader("👥 Behavioral Segmentation & Personalized Action Plan")
+        st.subheader("Behavioral Segmentation & Personalized Action Plan")
         
         try:
             current_root = os.path.dirname(current_dir)
@@ -223,11 +223,11 @@ with tab1:
             elif cluster_id == 1:
                 segment_name = "Premium High-Value Enterprises"
                 segment_desc = "Generates top tier revenue streams but demands high operational bandwidth."
-                strategy = "🚨 <b>VIP SUPPORT INTERVENTION:<b> Assign a dedicated relationship manager immediately. Offer bundle adjustments or priority customer service paths."
+                strategy = "<b>VIP SUPPORT INTERVENTION:<b> Assign a dedicated relationship manager immediately. Offer bundle adjustments or priority customer service paths."
             else:
                 segment_name = "High-Risk New Standard Registrations"
                 segment_desc = "Fresh accounts paying standard monthly charges but lacking structural tenure loyalty."
-                strategy = "📈 <b>ENGAGEMENT CONVERSION:<b> Offer a promotional discount if they upgrade from month-to-month to a 1-Year or 2-Year contract option."
+                strategy = "<b>ENGAGEMENT CONVERSION:<b> Offer a promotional discount if they upgrade from month-to-month to a 1-Year or 2-Year contract option."
                 
             # Render side-by-side segmentation card and action banner
             seg_col1, seg_col2 = st.columns([1, 2])
@@ -253,7 +253,7 @@ with tab1:
             
         # ----------------- LIVE SHAP EXPLAINABLE AI LAYER -----------------
         st.write("<br>", unsafe_allow_html=True)
-        st.subheader("🕵️‍♂️ Explainable AI (XAI) — Feature Attribution Breakdown")
+        st.subheader("Explainable AI (XAI) — Feature Attribution Breakdown")
         
         try:
             current_root = os.path.dirname(current_dir)
@@ -307,7 +307,7 @@ with tab1:
 
     # ----------------- MODULE 8: BULK CSV PROCESSING WORKSPACE -----------------
     st.write("<br><hr>", unsafe_allow_html=True)
-    st.subheader("📁 Bulk Customer File Evaluation Engine")
+    st.subheader("Bulk Customer File Evaluation Engine")
     st.markdown("Upload a standardized customer batch dataset (.csv) to append retention risk metrics across rows instantly:")
     
     uploaded_file = st.file_uploader("Choose a CSV file to evaluate", type="csv")
@@ -345,7 +345,7 @@ with tab1:
             st.error(f"Bulk ingestion pipeline halted: {batch_error}")
 
 with tab2:
-    st.markdown("### 📈 Historical Customer Trends Insights Platform")
+    st.markdown("### Historical Customer Trends Insights Platform")
     try:
         analytics_df = load_unified_analytics_data()
         
